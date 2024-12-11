@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="5">
+  <title>User Management</title>
+  <style>
+    /* Basic styling for the page */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background-color: #c50c0c;
+      padding: 20px;
+      text-align: left;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .search-container {
+      margin: 20px;
+      text-align: center;
+    }
+    .search-container input {
+      width: 50%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .table-container {
+      margin: 20px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #c50c0c;
+      color: white;
+    }
+    img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .no-results {
+      text-align: center;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    PILAPIL & T
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-container">
+    <input type="text" id="search" placeholder="Search by email..." oninput="filterUsers()">
+  </div>
+
+  <!-- User Table -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>IMAGE</th>
+          <th>EMAIL</th>
+          <th>PASSWORD</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <!-- User data will be dynamically inserted here -->
+      </tbody>
+    </table>
+    <p id="noResults" class="no-results" style="display:none;">No users found matching your search criteria.</p>
+  </div>
+
+  <script>
+    async function fetchUsers() {
+      try {
+        const response = await fetch('http://192.168.254.104:3000/api/users');
+        const users = await response.json();
+        displayUsers(users);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        alert('An error occurred while fetching users.');
+      }
+    }
+    function displayUsers(users) {
+      const userTableBody = document.getElementById('userTableBody');
+      const noResults = document.getElementById('noResults');
+
+      userTableBody.innerHTML = '';
+
+      if (users.length === 0) {
+        noResults.style.display = 'block';
+        return;
+      }
+
+      noResults.style.display = 'none';
+      
+      users.forEach(user => {
+        const row = document.createElement('tr');
+        const profileImage = user.profile_image ? `<img src="${user.profile_image}" alt="Profile">` : '<img src="https://via.placeholder.com/50" alt="No Image">';
+        row.innerHTML = `
+          <td>${profileImage}</td>
+          <td>${user.email}</td>
+          <td>${user.password}</td>
+        `;
+        userTableBody.appendChild(row);
+      });
+    }
+
+    function filterUsers() {
+      const searchTerm = document.getElementById('search').value.toLowerCase();
+      const userTableBody = document.getElementById('userTableBody');
+      const rows = userTableBody.getElementsByTagName('tr');
+      let found = false;
+
+      for (let i = 0; i < rows.length; i++) {
+        const emailCell = rows[i].getElementsByTagName('td')[1];
+        if (emailCell) {
+          const emailText = emailCell.textContent || emailCell.innerText;
+          if (emailText.toLowerCase().includes(searchTerm)) {
+            rows[i].style.display = '';
+            found = true;
+          } else {
+            rows[i].style.display = 'none';
+          }
+        }
+      }
+
+      document.getElementById('noResults').style.display = found ? 'none' : 'block';
+    }
+
+    window.onload = fetchUsers;
+  </script>
+</body>
+</html>
